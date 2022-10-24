@@ -65,6 +65,7 @@ class Cactus {
 var timer = 0;
 var cacuts여러개 = [];
 var 점프timer = 0;
+var animation;
 
 //ex) 애니매이션을 만들려면 x값을 1초에 60번 정도  ++ 해줘야 함
 // 게임 개발을 본격적으로 하고 싶으면 자바스크립트 라이브러리를 사용하는게 좋음
@@ -74,18 +75,18 @@ var 점프timer = 0;
 // 함수 생성
 function 프레임마다실행할거() {
     // 기본 자바스크립트 함수
-    requestAnimationFrame(프레임마다실행할거);
+    animation = requestAnimationFrame(프레임마다실행할거);
 
         timer++;
 
-        // 캔버스 지우기
+        // 캔버스 초기화
         // 캔버스를 먼저 초기화 하지 않고 누적해서 그리면 잔상이 남음
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // 장애물 그리기
         // 120 or 60 프레임마다 cacts를 그려줌
         // 모니터가 120 or 60hz면 timer % 120 or 60으로 모니터 주파수에 따라 다름
-        if (timer % 60 === 0) {
+        if (timer % 200 === 0) {
             // 120 or 60프레임마다 cacuts를 생성해서 cacuts여러개(배열-array)에 담아준다
             var cacts = new Cactus();
             cacuts여러개.push(cacts);
@@ -106,39 +107,63 @@ function 프레임마다실행할거() {
             
             // e(현재 장애물)의 x좌표가 0미만이면 제거
             if (a.x < 0){
-                o.splice(i, 0)
+                o.splice(i, 1)
             }
                 // splice() 원본 배열 자체를 수정
                 // 메소드는 배열의 기존 요소를 삭제 또는 교체하거나 새 요소를 추가하여 배열의 내용을 변경
             
+            // 장애물 이동 속도
+            a.x-= 4;
 
-            a.x--;
+            // 충돌체크를 여기서 하는 이유는  실시간으로 주인공vs모든 장애물 충돌체크를 해야함
+            // dino -> 유닛, a -> 장애물
+            충돌하냐(dino, a);
             // 장애물 그리기
             a.draw();
         })
 
+        // 점프중이면 위로 이동
         if (점프중 === true) {
             dino.y-= 3;
             점프timer++;
         }
+        // 점프가 끝나면 다시 아래로 이동
         if (점프중 === false){
             if(dino.y < 200){
                 dino.y+=3;
             }
         }
-        if (점프timer > 50){
+        // 점프의 높이 설정과 초기화
+        if (점프timer > 40){
             점프중 = false;
-            
             // 점프 초기화
             점프timer = 0;
         }
 
+        // 유닛 그리기
         dino.draw()
        
 }
 
 프레임마다실행할거();
 
+//충돌확인
+function 충돌하냐(dino, cactus) {
+    // 장애물(cactus.x) - 유닛(x)  ->  장애물x좌표 - 유닛의 오른쪽 x좌표
+    // 0보다 작으면 충돌
+    var x축차이 = cactus.x - (dino.x + dino.width);
+    var y축차이 = cactus.y - (dino.y + dino.height);
+    if (x축차이 < 0 && y축차이 < 0) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // 애니메이션 중지
+        cancelAnimationFrame(animation)
+    }
+
+}
+
+
+
+// 스페이스바 입력 시 점프 기능
 var 점프중 = false;
 document.addEventListener("keydown", function(e){
     if (e.code === 'Space'){
